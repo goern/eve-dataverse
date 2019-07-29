@@ -27,13 +27,16 @@ import requests
 
 from marshmallow import pprint
 
-from dataverse import regions, markets
+from dataverse import regions, markets, __version__
 
 daiquiri.setup(level=logging.DEBUG)
 _LOGGER = daiquiri.getLogger("eve_dataverse")
 
+allRegions = []
 
 if __name__ == "__main__":
+    _LOGGER.info(f"This is Eve Online Dataverse v{__version__}.")
+    _LOGGER.debug("DEBUG mode is enabled!")
     _LOGGER.info("harvesting data...")
 
     regionSchema = regions.RegionSchema()
@@ -44,4 +47,8 @@ if __name__ == "__main__":
         region = regions.get_region(region_id)
 
         if region is not None:
-            pprint(regionSchema.dump(region))
+            allRegions.append(region)
+
+    _LOGGER.debug("writing Regions to JSON file...")
+    with open("regions.json", "w") as outfile:
+        outfile.write(regionSchema.dumps(allRegions, many=True))

@@ -70,6 +70,8 @@ def get_regions() -> list:
 @_cache.memoize(typed=True, expire=600)
 def get_region(region_id: int) -> Region:
     payload = {}
+
+    # TODO we should handle errors and rate limiting...
     r = requests.get(f"{EVE_ONLINE_BASE_URL}/universe/regions/{region_id}?datasource=tranquility", params=payload)
 
     result = None

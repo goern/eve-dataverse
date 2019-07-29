@@ -106,3 +106,4 @@ coverage_html_report/
 *.retry
 run/*
 .vault_pass
+regions.json
