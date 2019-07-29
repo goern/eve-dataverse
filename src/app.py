@@ -21,10 +21,11 @@
 
 import os
 import logging
-import json
 
 import daiquiri
 import requests
+
+from marshmallow import pprint
 
 from dataverse import regions, markets
 
@@ -35,9 +36,12 @@ _LOGGER = daiquiri.getLogger("eve_dataverse")
 if __name__ == "__main__":
     _LOGGER.info("harvesting data...")
 
+    regionSchema = regions.RegionSchema()
+
     region_ids = regions.get_regions()
 
     for region_id in region_ids:
         region = regions.get_region(region_id)
 
-        print(region)
+        if region is not None:
+            pprint(regionSchema.dump(region))

@@ -34,6 +34,14 @@ class TestRegions(object):
     def test_get_region(self):
         region = dataverse.regions.get_region(10000001)
 
-        assert isinstance(region, dict)
-        assert region["region_id"] == 10000001
-        assert region["name"] == "Derelik"
+        assert isinstance(region, dataverse.regions.Region)
+        assert region.region_id == 10000001
+        assert region.name == "Derelik"
+
+    def test_get_region_with_no_description(self):
+        region = dataverse.regions.get_region(12000001)
+
+        assert isinstance(region, dataverse.regions.Region)
+        assert region.region_id == 12000001
+        assert region.name == "ADR01"
+        assert region.description is None

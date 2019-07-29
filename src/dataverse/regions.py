@@ -25,11 +25,38 @@ import logging
 import daiquiri
 import requests
 
+from marshmallow import Schema, ValidationError, fields, post_load
+
 
 from . import EVE_ONLINE_BASE_URL, _cache
 
 
 _LOGGER = daiquiri.getLogger(__name__)
+
+
+class Region:
+    def __init__(self, region_id=None, name=None, description=None, constellations=[]):
+        self.region_id = region_id
+        self.name = name
+        self.description = description
+        self.constellations = constellations
+
+    def __str__(self):
+        return f"{self.region_id}: {self.name}, {self.description}, constellations: {self.constellations}"
+
+
+class RegionSchema(Schema):
+    region_id = fields.Integer(required=True)
+    name = fields.String(required=True)
+    description = fields.String()
+    constellations = fields.List(fields.Integer(), required=True)
+
+    @post_load
+    def make_region(self, data, **kwargs):
+        return Region(**data)
+
+
+_regionSchema = RegionSchema()
 
 
 @_cache.memoize(typed=True, expire=600)
@@ -41,8 +68,15 @@ def get_regions() -> list:
 
 
 @_cache.memoize(typed=True, expire=600)
-def get_region(region_id: int) -> dict:
+def get_region(region_id: int) -> Region:
     payload = {}
     r = requests.get(f"{EVE_ONLINE_BASE_URL}/universe/regions/{region_id}?datasource=tranquility", params=payload)
 
-    return r.json()
+    result = None
+
+    try:
+        result = _regionSchema.load(r.json())
+    except ValidationError as err:
+        _LOGGER.error(err.messages)
+
+    return result

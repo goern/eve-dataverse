@@ -34,7 +34,7 @@ class TestTypes(object):
     def test_get_type(self):
         d = dataverse.universe.get_type(2019)
 
-        assert isinstance(d, dict)
-        assert d["group_id"] == 141
-        assert d["market_group_id"] == 1558
-        assert d["name"] == "Medium Cap Battery I Blueprint"
+        assert isinstance(d, dataverse.universe.Type)
+        assert d.group_id == 141
+        assert d.market_group_id == 1558
+        assert d.name == "Medium Cap Battery I Blueprint"
