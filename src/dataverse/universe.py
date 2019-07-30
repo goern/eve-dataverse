@@ -113,7 +113,7 @@ def get_types() -> dict:
 
 
 @_cache.memoize(typed=True, expire=600)
-def get_type(type_id: int) -> dict:
+def get_type(type_id: int) -> Type:
     payload = {}
     r = requests.get(f"{EVE_ONLINE_BASE_URL}/universe/types/{type_id}?datasource=tranquility", params=payload)
 
