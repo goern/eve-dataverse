@@ -28,7 +28,7 @@ class TestConstellations(object):
     def test_get_constellation(self):
         d = dataverse.constellations.get_constellation(20000001)
 
-        assert isinstance(d, dict)
-        assert d["constellation_id"] == 20000001
-        assert d["name"] == "San Matar"
-        assert 30000001 in d["systems"]
+        assert isinstance(d, dataverse.constellations.Constellation)
+        assert d.constellation_id == 20000001
+        assert d.name == "San Matar"
+        assert 30000001 in d.systems

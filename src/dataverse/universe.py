@@ -42,6 +42,7 @@ class Type:
         description,
         published,
         capacity=None,
+        graphic_id=None,
         dogma_attributes=None,
         dogma_effects=None,
         icon_id=None,
@@ -53,6 +54,7 @@ class Type:
         volume=None,
     ):
         self.type_id = type_id
+        self.graphic_id = graphic_id
         self.group_id = group_id
         self.name = name
         self.description = description
@@ -84,6 +86,7 @@ class TypeSchema(Schema):
     description = fields.String(required=True)
     dogma_attributes = fields.List(fields.Nested(DogmaAttributeSchema))
     dogma_effects = fields.List(fields.Nested(DogmaEffectSchema))
+    graphic_id = fields.Integer()
     group_id = fields.Integer(required=True)
     icon_id = fields.Integer()
     market_group_id = fields.Integer()

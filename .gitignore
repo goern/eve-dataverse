@@ -107,3 +107,5 @@ coverage_html_report/
 run/*
 .vault_pass
 regions.json
+types.json
+constellations.json

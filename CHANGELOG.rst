@@ -10,4 +10,5 @@ This project adheres to `Semantic Versioning <http://semver.org/>`_.
 -------------------------
 
 * added DiskCache for all the object currently existing, expire set to 600 seconds.
-* for the Region and Type data type we use `marshmallow 3 <https://marshmallow.readthedocs.io/en/3.0/>`_.
+* for the Region, Constellation and Type data type we use `marshmallow 3 <https://marshmallow.readthedocs.io/en/3.0/>`_.
+* `app.py` havests regions, constellations, and types, they are persisted to the coresponding json files.
