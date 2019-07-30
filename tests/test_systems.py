@@ -28,6 +28,6 @@ class TestSystems(object):
     def test_get_system(self):
         d = dataverse.systems.get_system(30000001)
 
-        assert isinstance(d, dict)
+        assert isinstance(d, dataverse.universe.System)
         assert d["system_id"] == 30000001
         assert d["name"] == "Tanoo"

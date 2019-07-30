@@ -25,16 +25,28 @@ import logging
 import daiquiri
 import requests
 
+from marshmallow import ValidationError, Schema, fields, post_load
 
 from . import EVE_ONLINE_BASE_URL, _cache
+from .universe import System, Position, SystemSchema
 
 
 _LOGGER = daiquiri.getLogger(__name__)
 
+_schema = SystemSchema()
+
 
 @_cache.memoize(typed=True, expire=600)
-def get_system(system_id: int) -> dict:
+def get_system(system_id: int) -> System:
     payload = {}
     r = requests.get(f"{EVE_ONLINE_BASE_URL}/universe/systems/{system_id}?datasource=tranquility", params=payload)
 
-    return r.json()
+    result = None
+
+    try:
+        result = _schema.load(r.json())
+    except ValidationError as err:
+        _LOGGER.debug(r.json())
+        _LOGGER.error(err.messages)
+
+    return result
