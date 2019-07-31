@@ -21,6 +21,7 @@
 
 import os
 import logging
+import http
 
 import daiquiri
 import requests
@@ -28,7 +29,7 @@ import requests
 from marshmallow import Schema, ValidationError, fields, post_load
 
 
-from . import EVE_ONLINE_BASE_URL, _cache
+from . import EVE_ONLINE_BASE_URL, EVE_ONLINE_REQUEST_HEADERS, _cache
 from .universe import Region, RegionSchema
 
 
@@ -49,9 +50,17 @@ def get_regions() -> list:
 @_cache.memoize(typed=True, expire=600)
 def get_region(region_id: int) -> Region:
     payload = {}
+    headers = EVE_ONLINE_REQUEST_HEADERS
 
     # TODO we should handle errors and rate limiting...
-    r = requests.get(f"{EVE_ONLINE_BASE_URL}/universe/regions/{region_id}?datasource=tranquility", params=payload)
+    try:
+        r = requests.get(
+            f"{EVE_ONLINE_BASE_URL}/universe/regions/{region_id}?datasource=tranquility",
+            params=payload,
+            headers=headers,
+        )
+    except Exception as e:  # TODO this is way to fuzzy
+        _LOGGER.error(e)
 
     result = None
 

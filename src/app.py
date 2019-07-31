@@ -16,7 +16,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>
 
 
-"""This is just a Test."""
+"""This is a harvester for Eve Online Swagger API (aka ESI) data."""
 
 
 import os
@@ -24,35 +24,18 @@ import logging
 
 import daiquiri
 import requests
+import click
 
 from marshmallow import pprint
 
 from dataverse import universe, regions, constellations, markets, __version__
 
 daiquiri.setup(level=logging.DEBUG)
-_LOGGER = daiquiri.getLogger("eve_dataverse")
+_LOGGER = daiquiri.getLogger("dataverse.harvester")
 
 allRegions = []
 allConstellations = []
 allTypes = []
-
-
-def harvest_region_data():
-    _LOGGER.info("harvesting Region data...")
-
-    schema = regions.RegionSchema()
-
-    region_ids = regions.get_regions()
-
-    for region_id in region_ids:
-        region = regions.get_region(region_id)
-
-        if region is not None:
-            allRegions.append(region)
-
-    _LOGGER.debug("writing Regions to JSON file...")
-    with open("regions.json", "w") as outfile:
-        outfile.write(schema.dumps(allRegions, many=True))
 
 
 def harvest_constellation_data():
@@ -90,12 +73,83 @@ def harvest_type_data():
         outfile.write(schema.dumps(allTypes, many=True))
 
 
-if __name__ == "__main__":
-    _LOGGER.info(f"This is Eve Online Dataverse v{__version__}.")
+@click.group()
+@click.version_option(version=__version__)
+@click.option("--debug/--no-debug", default=False, envvar="DEBUG")
+@click.pass_context
+def cli(ctx, debug):
+    _LOGGER.info(f"This is Eve Online Dataverse harvester v{__version__}.")
     _LOGGER.debug("DEBUG mode is enabled!")
 
-    harvest_region_data()
-    harvest_constellation_data()
 
-    # region_id 10000030
-    _LOGGER.info("harvesting Market data...")
+@cli.group(name="region")
+@click.pass_context
+def region_command(ctx):
+    pass
+
+
+@cli.group(name="constellation")
+@click.pass_context
+def constellation_command(ctx):
+    pass
+
+
+@cli.group(name="system")
+@click.pass_context
+def system_command(ctx):
+    pass
+
+
+@cli.group(name="planet")
+@click.pass_context
+def planet_command(ctx):
+    pass
+
+
+@cli.group(name="type")
+@click.pass_context
+def type_command(ctx):
+    pass
+
+
+@region_command.command(name="get")
+@click.option("--all", is_flag=True, default=False, help="get all Regions")
+@click.option("--force", is_flag=True, default=False, help="forcing the cache to be cleared before harvesting")
+@click.argument("id", required=False)
+@click.pass_context
+def region_command_get(ctx, all, force, id=None):
+    """The `region get` sub-command."""
+    _LOGGER.info("harvesting Region data...")
+
+    schema = regions.RegionSchema()
+
+    if force:
+        _LOGGER.debug(f"clearing cache before harvesting")
+
+        raise NotImplementedError
+
+    if all:
+        _LOGGER.debug("harvesting all Region data...")
+
+        region_ids = regions.get_regions()
+
+        for region_id in region_ids:
+            region = regions.get_region(region_id)
+
+            if region is not None:
+                allRegions.append(region)
+
+        _LOGGER.debug("writing Regions to JSON file...")
+        with open("regions.json", "w") as outfile:
+            outfile.write(schema.dumps(allRegions, many=True))
+
+    elif id is not None:
+        _LOGGER.debug(f"harvesting Region {id} data...")
+
+        raise NotImplementedError
+    elif id is None:
+        _LOGGER.error("a Region ID is required!")
+
+
+if __name__ == "__main__":
+    cli()
