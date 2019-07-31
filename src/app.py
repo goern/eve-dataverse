@@ -55,29 +55,11 @@ def harvest_constellation_data():
         outfile.write(schema.dumps(allConstellations, many=True))
 
 
-def harvest_type_data():
-    _LOGGER.info("harvesting Type data...")
-
-    schema = universe.TypeSchema()
-
-    type_ids = universe.get_types()
-
-    for type_id in type_ids:
-        type_object = universe.get_type(type_id)
-
-        if type_object is not None:
-            allTypes.append(type_object)
-
-    _LOGGER.debug("writing Types to JSON file...")
-    with open("types.json", "w") as outfile:
-        outfile.write(schema.dumps(allTypes, many=True))
-
-
 @click.group()
 @click.version_option(version=__version__)
 @click.option("--debug/--no-debug", default=False, envvar="DEBUG")
 @click.pass_context
-def cli(ctx, debug):
+def cli(ctx=None, debug=False):
     _LOGGER.info(f"This is Eve Online Dataverse harvester v{__version__}.")
     _LOGGER.debug("DEBUG mode is enabled!")
 
@@ -121,7 +103,7 @@ def region_command_get(ctx, all, force, id=None):
     """The `region get` sub-command."""
     _LOGGER.info("harvesting Region data...")
 
-    schema = regions.RegionSchema()
+    schema = universe.RegionSchema()
 
     if force:
         _LOGGER.debug(f"clearing cache before harvesting")
@@ -149,6 +131,45 @@ def region_command_get(ctx, all, force, id=None):
         raise NotImplementedError
     elif id is None:
         _LOGGER.error("a Region ID is required!")
+
+
+@type_command.command(name="get")
+@click.option("--all", is_flag=True, default=False, help="get all Types")
+@click.option("--force", is_flag=True, default=False, help="forcing the cache to be cleared before harvesting")
+@click.argument("id", required=False)
+@click.pass_context
+def type_command_get(ctx, all, force, id=None):
+    """The `type get` sub-command."""
+    _LOGGER.info("harvesting Type data...")
+
+    schema = universe.TypeSchema()
+
+    if force:
+        _LOGGER.debug(f"clearing cache before harvesting")
+
+        raise NotImplementedError
+
+    if all:
+        _LOGGER.debug("harvesting all Type data...")
+
+        type_ids = universe.get_types()
+
+        for type_id in type_ids:
+            type_object = universe.get_type(type_id)
+
+            if type_object is not None:
+                allTypes.append(type_object)
+
+        _LOGGER.debug("writing Types to JSON file...")
+        with open("types.json", "w") as outfile:
+            outfile.write(schema.dumps(allTypes, many=True))
+
+    elif id is not None:
+        _LOGGER.debug(f"harvesting Type {id} data...")
+
+        raise NotImplementedError
+    elif id is None:
+        _LOGGER.error("a Type ID is required!")
 
 
 if __name__ == "__main__":
