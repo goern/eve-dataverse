@@ -25,9 +25,9 @@ import logging
 import daiquiri
 import requests
 
-from marshmallow import Schema, fields, post_load
+from marshmallow import Schema, ValidationError, fields, post_load
 
-from . import EVE_ONLINE_BASE_URL, _cache
+from . import EVE_ONLINE_BASE_URL, EVE_ONLINE_REQUEST_HEADERS, _cache
 
 
 _LOGGER = daiquiri.getLogger(__name__)
@@ -237,6 +237,21 @@ def get_types() -> dict:
 @_cache.memoize(typed=True, expire=600)
 def get_type(type_id: int) -> Type:
     payload = {}
-    r = requests.get(f"{EVE_ONLINE_BASE_URL}/universe/types/{type_id}?datasource=tranquility", params=payload)
+    headers = EVE_ONLINE_REQUEST_HEADERS
+    result = None
 
-    return _typeSchema.load(r.json())
+    # TODO we should handle rate limiting...
+    try:
+        r = requests.get(
+            f"{EVE_ONLINE_BASE_URL}/universe/types/{type_id}?datasource=tranquility", params=payload, headers=headers
+        )
+
+        result = _typeSchema.load(r.json())
+
+    except ValidationError as err:
+        _LOGGER.error(err.messages)
+
+    except Exception as e:  # TODO this is way to fuzzy
+        _LOGGER.error(e)
+
+    return result
