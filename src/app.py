@@ -21,6 +21,7 @@
 
 import os
 import logging
+import json
 
 import daiquiri
 import requests
@@ -55,12 +56,33 @@ def harvest_constellation_data():
         outfile.write(schema.dumps(allConstellations, many=True))
 
 
+def load_all_regions() -> list:
+    """Load all Regions from the database file."""
+    allRegions = []
+
+    _LOGGER.debug("loading Regions from JSON file...")
+
+    with open("regions.json") as file:
+        data = json.load(file)
+
+        if data is not None:
+            for region in data:
+                allRegions.append(universe.RegionSchema().load(region))
+
+        else:
+            _LOGGER.error("Can't read Regions from JSON file.")
+
+    _LOGGER.debug(f"loaded {len(allRegions)} Regions from JSON file...")
+
+    return allRegions
+
+
 @click.group()
 @click.version_option(version=__version__)
 @click.option("--debug/--no-debug", default=False, envvar="DEBUG")
 @click.pass_context
 def cli(ctx, debug):
-    _LOGGER.info(f"This is Eve Online Dataverse harvester v{__version__}.")
+    print(f"This is Eve Online Dataverse harvester v{__version__}.")
     _LOGGER.debug("DEBUG mode is enabled!")
 
 
@@ -137,6 +159,22 @@ def region_command_get(ctx, all, force, id=None):
         raise NotImplementedError
     elif id is None:
         _LOGGER.error("a Region ID is required!")
+
+
+@region_command.command(name="find")
+@click.argument("name", required=True)
+@click.option("--json-output", is_flag=True, default=False, help="print search result as JSON")
+@click.pass_context
+def region_command_find_by_name(ctx, json_output, name=None):
+    """The `region find` sub-command."""
+    _LOGGER.debug("finding Region...")
+
+    for region in load_all_regions():
+        if region.name.upper() == name.upper():
+            if json_output:
+                print(universe.RegionSchema().dumps(region))
+            else:
+                print(region)
 
 
 @type_command.command(name="get")
