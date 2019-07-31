@@ -29,7 +29,7 @@ import click
 
 from marshmallow import pprint
 
-from dataverse import universe, regions, constellations, markets, __version__
+from dataverse import universe, regions, constellations, markets, types, __version__
 
 daiquiri.setup(level=logging.DEBUG)
 _LOGGER = daiquiri.getLogger("dataverse.harvester")
@@ -196,10 +196,10 @@ def type_command_get(ctx, all, force, id=None):
     if all:
         _LOGGER.debug("harvesting all Type data...")
 
-        type_ids = universe.get_types()
+        type_ids = types.get_types()
 
         for type_id in type_ids:
-            type_object = universe.get_type(type_id)
+            type_object = types.get_type(type_id)
 
             if type_object is not None:
                 allTypes.append(type_object)

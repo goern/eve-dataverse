@@ -26,13 +26,13 @@ import dataverse
 
 class TestTypes(object):
     def test_get_types(self):
-        d = dataverse.universe.get_types()
+        d = dataverse.types.get_types()
 
         assert isinstance(d, list)
         assert 2019 in d
 
     def test_get_type(self):
-        d = dataverse.universe.get_type(2019)
+        d = dataverse.types.get_type(2019)
 
         assert isinstance(d, dataverse.universe.Type)
         assert d.group_id == 141

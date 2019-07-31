@@ -16,7 +16,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>
 
 
-"""This is just a Test."""
+"""This has all the Schemata and Classes for things we get from ESI."""
 
 
 import os
@@ -26,8 +26,6 @@ import daiquiri
 import requests
 
 from marshmallow import Schema, ValidationError, fields, post_load
-
-from . import EVE_ONLINE_BASE_URL, EVE_ONLINE_REQUEST_HEADERS, _cache
 
 
 _LOGGER = daiquiri.getLogger(__name__)
@@ -221,37 +219,3 @@ class TypeSchema(Schema):
     @post_load
     def make_type(self, data, **kwargs):
         return Type(**data)
-
-
-_typeSchema = TypeSchema()
-
-
-@_cache.memoize(typed=True, expire=600)
-def get_types() -> dict:
-    payload = {}
-    r = requests.get(f"{EVE_ONLINE_BASE_URL}/universe/types?datasource=tranquility", params=payload)
-
-    return r.json()
-
-
-@_cache.memoize(typed=True, expire=600)
-def get_type(type_id: int) -> Type:
-    payload = {}
-    headers = EVE_ONLINE_REQUEST_HEADERS
-    result = None
-
-    # TODO we should handle rate limiting...
-    try:
-        r = requests.get(
-            f"{EVE_ONLINE_BASE_URL}/universe/types/{type_id}?datasource=tranquility", params=payload, headers=headers
-        )
-
-        result = _typeSchema.load(r.json())
-
-    except ValidationError as err:
-        _LOGGER.error(err.messages)
-
-    except Exception as e:  # TODO this is way to fuzzy
-        _LOGGER.error(e)
-
-    return result
