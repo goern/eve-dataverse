@@ -120,7 +120,7 @@ class SystemPlanets:
 
 
 class Region:
-    def __init__(self, region_id=None, name=None, description=None, constellations=[]):
+    def __init__(self, region_id=None, name=None, description="", constellations=[]):
         self.region_id = region_id
         self.name = name
         self.description = description

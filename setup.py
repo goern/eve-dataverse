@@ -16,9 +16,7 @@ from setuptools import setup
 
 
 def read(*names, **kwargs):
-    with io.open(
-        join(dirname(__file__), *names), encoding=kwargs.get("encoding", "utf8")
-    ) as fh:
+    with io.open(join(dirname(__file__), *names), encoding=kwargs.get("encoding", "utf8")) as fh:
         return fh.read()
 
 
@@ -29,9 +27,7 @@ setup(
     description="...",
     long_description="%s\n%s"
     % (
-        re.compile("^.. start-badges.*^.. end-badges", re.M | re.S).sub(
-            "", read("README.rst")
-        ),
+        re.compile("^.. start-badges.*^.. end-badges", re.M | re.S).sub("", read("README.rst")),
         re.sub(":[a-z]+:`~?(.*?)`", r"``\1``", read("CHANGELOG.rst")),
     ),
     author="Christoph Görn",
@@ -56,7 +52,7 @@ setup(
     project_urls={"Documentation": "...", "Changelog": "...", "Issue Tracker": "..."},
     keywords=["eve-online"],
     python_requires=">=3.7",
-    install_requires=["requests"],
+    install_requires=["Click", "daiquiri", "diskcache", "marshmallow", "requests"],
     extras_require={},
-    entry_points={"console_scripts": ["nameless = nameless.cli:main"]},
+    entry_points={"console_scripts": ["dataverse = dataverse.app:cli"]},
 )

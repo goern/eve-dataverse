@@ -29,3 +29,4 @@ _cache = dc.Cache("tmp")
 
 
 EVE_ONLINE_BASE_URL = "https://esi.evetech.net/latest"
+EVE_ONLINE_REQUEST_HEADERS = {"User-Agent": _USER_AGENT}

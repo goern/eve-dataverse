@@ -44,4 +44,4 @@ class TestRegions(object):
         assert isinstance(region, dataverse.regions.Region)
         assert region.region_id == 12000001
         assert region.name == "ADR01"
-        assert region.description is None
+        assert region.description is ""
