@@ -59,7 +59,7 @@ def harvest_constellation_data():
 @click.version_option(version=__version__)
 @click.option("--debug/--no-debug", default=False, envvar="DEBUG")
 @click.pass_context
-def cli(ctx=None, debug=False):
+def cli(ctx, debug):
     _LOGGER.info(f"This is Eve Online Dataverse harvester v{__version__}.")
     _LOGGER.debug("DEBUG mode is enabled!")
 
@@ -91,6 +91,12 @@ def planet_command(ctx):
 @cli.group(name="type")
 @click.pass_context
 def type_command(ctx):
+    pass
+
+
+@cli.group(name="order")
+@click.pass_context
+def order_command(ctx):
     pass
 
 
@@ -170,6 +176,22 @@ def type_command_get(ctx, all, force, id=None):
         raise NotImplementedError
     elif id is None:
         _LOGGER.error("a Type ID is required!")
+
+
+@order_command.command(name="get")
+@click.option("--region-id", required=True, help="Region ID to get the market orders from")
+@click.option("--type-id", help="limit getting market orders to this Type ID")
+@click.option("--order-type", type=click.Choice(["all", "sell", "buy"]), help="the order type to get")
+@click.option("--force", is_flag=True, default=False, help="forcing the cache to be cleared before harvesting")
+@click.pass_context
+def order_command_get(ctx, force, type_id, order_type, region_id=None):
+    """The `order get` sub-command."""
+    _LOGGER.info("getting Market data...")
+
+    if force:
+        _LOGGER.debug(f"clearing cache before harvesting")
+
+        raise NotImplementedError
 
 
 if __name__ == "__main__":
