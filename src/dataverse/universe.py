@@ -99,6 +99,7 @@ class System:
         stargates: list,
         stations: list,
         system_id: int,
+        planets: list,
     ):
         self.constellation_id = constellation_id
         self.name = name
