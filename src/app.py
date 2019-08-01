@@ -56,32 +56,11 @@ def harvest_constellation_data():
         outfile.write(schema.dumps(allConstellations, many=True))
 
 
-def load_all_regions() -> list:
-    """Load all Regions from the database file."""
-    allRegions = []
-
-    _LOGGER.debug("loading Regions from JSON file...")
-
-    with open("regions.json") as file:
-        data = json.load(file)
-
-        if data is not None:
-            for region in data:
-                allRegions.append(universe.RegionSchema().load(region))
-
-        else:
-            _LOGGER.error("Can't read Regions from JSON file.")
-
-    _LOGGER.debug(f"loaded {len(allRegions)} Regions from JSON file...")
-
-    return allRegions
-
-
 @click.group()
 @click.version_option(version=__version__)
 @click.option("--debug/--no-debug", default=False, envvar="DEBUG")
 @click.pass_context
-def cli(ctx, debug):
+def cli(ctx=None, debug=True):
     print(f"This is Eve Online Dataverse harvester v{__version__}.")
     _LOGGER.debug("DEBUG mode is enabled!")
 
@@ -169,7 +148,7 @@ def region_command_find_by_name(ctx, json_output, name=None):
     """The `region find` sub-command."""
     _LOGGER.debug("finding Region...")
 
-    for region in load_all_regions():
+    for region in regions.load_all_regions():
         if region.name.upper() == name.upper():
             if json_output:
                 print(universe.RegionSchema().dumps(region))
@@ -216,10 +195,33 @@ def type_command_get(ctx, all, force, id=None):
         _LOGGER.error("a Type ID is required!")
 
 
+@type_command.command(name="find")
+@click.argument("search-string", required=True)
+@click.option(
+    "--search-in-attribute",
+    type=click.Choice(["type_id", "name", "description"]),
+    default="type_id",
+    help="which attribute to search thru",
+)
+@click.option("--json-output", is_flag=True, default=False, help="print search result as JSON")
+@click.pass_context
+def type_command_find_by_id(ctx, json_output, search_in_attribute, search_string=None):
+    """The `type find` sub-command."""
+    _LOGGER.debug("finding Type...")
+
+    for t in types.load_all_types():
+        # TODO implement to search thru name or description
+        if t.type_id == search_string:
+            if json_output:
+                print(universe.TypeSchema().dumps(t))
+            else:
+                print(t)
+
+
 @order_command.command(name="get")
 @click.option("--region-id", required=True, help="Region ID to get the market orders from")
-@click.option("--type-id", help="limit getting market orders to this Type ID")
-@click.option("--order-type", type=click.Choice(["all", "sell", "buy"]), help="the order type to get")
+@click.option("--type-id", default=34, help="limit getting market orders to this Type ID")
+@click.option("--order-type", type=click.Choice(["all", "sell", "buy"]), default="all", help="the order type to get")
 @click.option("--force", is_flag=True, default=False, help="forcing the cache to be cleared before harvesting")
 @click.pass_context
 def order_command_get(ctx, force, type_id, order_type, region_id=None):
@@ -230,6 +232,11 @@ def order_command_get(ctx, force, type_id, order_type, region_id=None):
         _LOGGER.debug(f"clearing cache before harvesting")
 
         raise NotImplementedError
+
+    if (region_id is not None) and (type_id is not None):
+        orders = markets.get_orders(region_id=region_id, type_id=type_id, order_type=order_type)
+
+        print(orders)
 
 
 if __name__ == "__main__":

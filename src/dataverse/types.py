@@ -21,6 +21,8 @@
 
 import os
 import logging
+import json
+import time
 
 import daiquiri
 import requests
@@ -37,12 +39,57 @@ _LOGGER = daiquiri.getLogger(__name__)
 _typeSchema = TypeSchema()
 
 
+def load_all_types() -> list:
+    """Load all Types from the database file."""
+    allTypes = []
+
+    _LOGGER.debug("loading Types from JSON file...")
+
+    with open("types.json") as file:
+        data = json.load(file)
+
+        if data is not None:
+            for t in data:
+                try:
+                    allTypes.append(TypeSchema().load(t))
+                except ValidationError as e:
+                    _LOGGER.error(e)
+                    continue
+        else:
+            _LOGGER.error("Can't read Types from JSON file.")
+
+    _LOGGER.debug(f"loaded {len(allTypes)} Types from JSON file...")
+
+    return allTypes
+
+
 @_cache.memoize(typed=True, expire=600)
 def get_types() -> dict:
+    headers = EVE_ONLINE_REQUEST_HEADERS
     payload = {}
-    r = requests.get(f"{EVE_ONLINE_BASE_URL}/universe/types?datasource=tranquility", params=payload)
+    responses = []
 
-    return r.json()
+    start_time = time.time()
+
+    # FIXME exception handling...
+    r = requests.get(f"{EVE_ONLINE_BASE_URL}/universe/types?datasource=tranquility", params=payload)
+    pages = int(r.headers["X-Pages"])
+
+    responses.extend(r.json())
+
+    for page in range(2, pages - 1):
+        r = requests.get(
+            f"{EVE_ONLINE_BASE_URL}/universe/types?datasource=tranquility&page={page}", params=payload, headers=headers
+        )
+        responses.extend(r.json())
+    # TODO implement pagination
+
+    end_time = time.time()
+    elapsed = end_time - start_time
+    _LOGGER.debug(f"time elapsed to get all Types: {elapsed}")
+
+    _LOGGER.debug(f"harvested {len(responses)} Types.")
+    return responses
 
 
 @_cache.memoize(typed=True, expire=600)

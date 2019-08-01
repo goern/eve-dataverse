@@ -40,11 +40,11 @@ class Type:
         description,
         published,
         capacity=None,
-        graphic_id=None,
-        dogma_attributes=None,
-        dogma_effects=None,
-        icon_id=None,
-        market_group_id=None,
+        graphic_id=-1,  # TODO is it ok to set all these to -1 as a default?!
+        dogma_attributes=[],
+        dogma_effects=[],
+        icon_id=-1,
+        market_group_id=-1,
         mass=None,
         packaged_volume=None,
         portion_size=None,
@@ -67,6 +67,9 @@ class Type:
         self.portion_size = portion_size
         self.radius = radius
         self.volume = volume
+
+    def __str__(self):
+        return f"Type {self.type_id}: {self.name}, {self.description}"
 
 
 class Position:

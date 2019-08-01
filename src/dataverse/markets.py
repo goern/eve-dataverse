@@ -26,7 +26,7 @@ import daiquiri
 import requests
 
 
-from . import EVE_ONLINE_BASE_URL, _cache
+from . import EVE_ONLINE_BASE_URL, EVE_ONLINE_REQUEST_HEADERS, _cache
 
 
 _LOGGER = daiquiri.getLogger(__name__)
@@ -35,8 +35,51 @@ _LOGGER = daiquiri.getLogger(__name__)
 @_cache.memoize(typed=True, expire=600)
 def get_order_history(region_id: int, type_id: int) -> dict:
     payload = {}
-    r = requests.get(
-        f"{EVE_ONLINE_BASE_URL}/markets/{region_id}/history?datasource=tranquility&type_id={type_id}", params=payload
-    )
+    headers = EVE_ONLINE_REQUEST_HEADERS
+    result = None
 
-    return r.json()
+    _LOGGER.debug(f"getting market order history for Region {region_id} and Type {type_id}")
+
+    # TODO we should handle rate limiting...
+    try:
+        r = requests.get(
+            f"{EVE_ONLINE_BASE_URL}/markets/{region_id}/history?datasource=tranquility&type_id={type_id}",
+            params=payload,
+            headers=headers,
+        )
+
+        result = r.json()
+
+    except Exception as e:  # TODO this is way to fuzzy
+        _LOGGER.error(e)
+
+    return result
+
+
+@_cache.memoize(typed=True, expire=600)
+def get_orders(region_id: int, order_type: str, type_id: int) -> dict:
+    """Get all Orders for the given Region, Order Type and Type."""
+    payload = {}
+    headers = EVE_ONLINE_REQUEST_HEADERS
+    result = None
+
+    _LOGGER.debug(f"getting market orders for Region {region_id} and Type {type_id}, Order Type: {order_type}")
+
+    # TODO we should handle rate limiting...
+    try:
+        r = requests.get(
+            f"{EVE_ONLINE_BASE_URL}/markets/{region_id}/orders?datasource=tranquility&order_type={order_type}&type_id={type_id}&page=1",  # TODO pagination
+            params=payload,
+            headers=headers,
+        )
+
+        pages = r.headers["X-Pages"]
+
+        _LOGGER.debug(f"the result has {pages} pages...")
+
+        result = r.json()
+
+    except Exception as e:  # TODO this is way to fuzzy
+        _LOGGER.error(e)
+
+    return result

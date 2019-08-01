@@ -21,6 +21,7 @@
 
 import os
 import logging
+import json
 import http
 
 import daiquiri
@@ -37,6 +38,27 @@ _LOGGER = daiquiri.getLogger(__name__)
 
 
 _regionSchema = RegionSchema()
+
+
+def load_all_regions() -> list:
+    """Load all Regions from the database file."""
+    allRegions = []
+
+    _LOGGER.debug("loading Regions from JSON file...")
+
+    with open("regions.json") as file:
+        data = json.load(file)
+
+        if data is not None:
+            for region in data:
+                allRegions.append(RegionSchema().load(region))
+
+        else:
+            _LOGGER.error("Can't read Regions from JSON file.")
+
+    _LOGGER.debug(f"loaded {len(allRegions)} Regions from JSON file...")
+
+    return allRegions
 
 
 @_cache.memoize(typed=True, expire=600)
