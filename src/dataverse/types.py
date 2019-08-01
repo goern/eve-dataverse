@@ -82,7 +82,6 @@ def get_types() -> dict:
             f"{EVE_ONLINE_BASE_URL}/universe/types?datasource=tranquility&page={page}", params=payload, headers=headers
         )
         responses.extend(r.json())
-    # TODO implement pagination
 
     end_time = time.time()
     elapsed = end_time - start_time
