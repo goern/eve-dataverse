@@ -29,7 +29,7 @@ import click
 
 from marshmallow import pprint
 
-from dataverse import universe, regions, constellations, markets, types, __version__
+from dataverse import universe, regions, constellations, markets, types, common, __version__
 
 daiquiri.setup(level=logging.DEBUG)
 _LOGGER = daiquiri.getLogger("dataverse.harvester")

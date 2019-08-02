@@ -29,14 +29,14 @@ import requests
 
 from marshmallow import Schema, ValidationError, fields, post_load
 
-from . import EVE_ONLINE_BASE_URL, EVE_ONLINE_REQUEST_HEADERS, _cache
+from . import common, _cache
 from .universe import Type, TypeSchema
 
 
 _LOGGER = daiquiri.getLogger(__name__)
 
 
-_typeSchema = TypeSchema()
+_schema = TypeSchema()
 
 
 def load_all_types() -> list:
@@ -64,51 +64,25 @@ def load_all_types() -> list:
 
 
 @_cache.memoize(typed=True, expire=600)
-def get_types() -> dict:
-    headers = EVE_ONLINE_REQUEST_HEADERS
-    payload = {}
-    responses = []
-
-    start_time = time.time()
-
-    # FIXME exception handling...
-    r = requests.get(f"{EVE_ONLINE_BASE_URL}/universe/types?datasource=tranquility", params=payload)
-    pages = int(r.headers["X-Pages"])
-
-    responses.extend(r.json())
-
-    for page in range(2, pages - 1):
-        r = requests.get(
-            f"{EVE_ONLINE_BASE_URL}/universe/types?datasource=tranquility&page={page}", params=payload, headers=headers
-        )
-        responses.extend(r.json())
-
-    end_time = time.time()
-    elapsed = end_time - start_time
-    _LOGGER.debug(f"time elapsed to get all Types: {elapsed}")
-
-    _LOGGER.debug(f"harvested {len(responses)} Types.")
-    return responses
+def get_types() -> list:
+    return common.get_objects(f"/universe/types?datasource=tranquility")
 
 
 @_cache.memoize(typed=True, expire=600)
 def get_type(type_id: int) -> Type:
-    payload = {}
-    headers = EVE_ONLINE_REQUEST_HEADERS
     result = None
 
-    # TODO we should handle rate limiting...
     try:
-        r = requests.get(
-            f"{EVE_ONLINE_BASE_URL}/universe/types/{type_id}?datasource=tranquility", params=payload, headers=headers
-        )
-
-        result = _typeSchema.load(r.json())
+        # this will return a list with one element...
+        r = common.get_objects(f"/universe/types/{type_id!s}?datasource=tranquility")
+        _LOGGER.debug(r)
+        result = _schema.load(r)
 
     except ValidationError as err:
         _LOGGER.error(err.messages)
 
     except Exception as e:  # TODO this is way to fuzzy
         _LOGGER.error(e)
+        raise e
 
     return result

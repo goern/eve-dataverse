@@ -30,7 +30,7 @@ import requests
 from marshmallow import Schema, ValidationError, fields, post_load
 
 
-from . import EVE_ONLINE_BASE_URL, EVE_ONLINE_REQUEST_HEADERS, _cache
+from . import common, _cache
 from .universe import Region, RegionSchema
 
 
@@ -63,32 +63,24 @@ def load_all_regions() -> list:
 
 @_cache.memoize(typed=True, expire=600)
 def get_regions() -> list:
-    payload = {}
-    r = requests.get(f"{EVE_ONLINE_BASE_URL}/universe/regions/?datasource=tranquility", params=payload)
-
-    return r.json()
+    return common.get_objects(f"/universe/regions/?datasource=tranquility")
 
 
 @_cache.memoize(typed=True, expire=600)
 def get_region(region_id: int) -> Region:
-    payload = {}
-    headers = EVE_ONLINE_REQUEST_HEADERS
+    result = None
 
     # TODO we should handle errors and rate limiting...
     try:
-        r = requests.get(
-            f"{EVE_ONLINE_BASE_URL}/universe/regions/{region_id}?datasource=tranquility",
-            params=payload,
-            headers=headers,
-        )
-    except Exception as e:  # TODO this is way to fuzzy
-        _LOGGER.error(e)
+        # this will return a list with one element...
+        r = common.get_objects(f"/universe/regions/{region_id}?datasource=tranquility")
+        result = _regionSchema.load(r)
 
-    result = None
-
-    try:
-        result = _regionSchema.load(r.json())
     except ValidationError as err:
         _LOGGER.error(err.messages)
+
+    except Exception as e:  # TODO this is way to fuzzy
+        _LOGGER.error(e)
+        raise e
 
     return result

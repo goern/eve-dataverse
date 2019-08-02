@@ -16,19 +16,23 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>
 
 
-"""This is just a Test."""
+"""All the exceptions!"""
 
 
-import diskcache as dc
+class DataverseError(Exception):
+    """Base class for exceptions in the Dataverse module."""
 
-from .exceptions import DataverseError, MissingRequiredArgumentError
-
-
-__version__ = "0.1.0-dev"
-_USER_AGENT = f"b4dataverse/{__version__}"
-
-_cache = dc.Cache("tmp")
+    pass
 
 
-EVE_ONLINE_BASE_URL = "https://esi.evetech.net/latest"
-EVE_ONLINE_REQUEST_HEADERS = {"User-Agent": _USER_AGENT}
+class MissingRequiredArgumentError(DataverseError):
+    """Exception raised when a required argument is not provided.
+
+    Attributes:
+        expression -- input expression in which the error occurred
+        message -- explanation of the error
+    """
+
+    def __init__(self, expression, message):
+        self.expression = expression
+        self.message = message

@@ -27,7 +27,7 @@ import requests
 
 from marshmallow import ValidationError, Schema, fields, post_load
 
-from . import EVE_ONLINE_BASE_URL, _cache
+from . import common, _cache
 from .universe import System, Position, SystemSchema
 
 
@@ -38,15 +38,19 @@ _schema = SystemSchema()
 
 @_cache.memoize(typed=True, expire=600)
 def get_system(system_id: int) -> System:
-    payload = {}
-    r = requests.get(f"{EVE_ONLINE_BASE_URL}/universe/systems/{system_id}?datasource=tranquility", params=payload)
-
     result = None
 
     try:
-        result = _schema.load(r.json())
+        # this will return a list with one element...
+        r = common.get_objects(f"/universe/systems/{system_id}?datasource=tranquility")
+        _LOGGER.debug(r)
+        result = _schema.load(r)
+
     except ValidationError as err:
-        _LOGGER.debug(r.json())
         _LOGGER.error(err.messages)
+
+    except Exception as e:  # TODO this is way to fuzzy
+        _LOGGER.error(e)
+        raise e
 
     return result

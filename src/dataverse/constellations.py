@@ -27,30 +27,31 @@ import requests
 
 from marshmallow import ValidationError, Schema, fields, post_load
 
-from . import EVE_ONLINE_BASE_URL, _cache
+from . import common, _cache
 from .universe import Constellation, Position, ConstellationSchema, PositionSchema
 
 
 _LOGGER = daiquiri.getLogger(__name__)
 
 
-_constellationSchema = ConstellationSchema()
+_schema = ConstellationSchema()
 
 
 @_cache.memoize(typed=True, expire=600)
 def get_constellation(constellation_id: int) -> Constellation:
-    payload = {}
-
-    # TODO we should handle errors and rate limiting...
-    r = requests.get(
-        f"{EVE_ONLINE_BASE_URL}/universe/constellations/{constellation_id}?datasource=tranquility", params=payload
-    )
-
     result = None
 
     try:
-        result = _constellationSchema.load(r.json())
+        # this will return a list with one element...
+        r = common.get_objects(f"/universe/constellations/{constellation_id!s}?datasource=tranquility")
+        _LOGGER.debug(r)
+        result = _schema.load(r)
+
     except ValidationError as err:
         _LOGGER.error(err.messages)
+
+    except Exception as e:  # TODO this is way to fuzzy
+        _LOGGER.error(e)
+        raise e
 
     return result

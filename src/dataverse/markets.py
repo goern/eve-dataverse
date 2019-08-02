@@ -42,6 +42,7 @@ def get_order_history(region_id: int, type_id: int) -> dict:
 
     # TODO we should handle rate limiting...
     try:
+        # TODO implement pagination
         r = requests.get(
             f"{EVE_ONLINE_BASE_URL}/markets/{region_id}/history?datasource=tranquility&type_id={type_id}",
             params=payload,
