@@ -16,6 +16,11 @@ daiquiri = "*"
 diskcache = "*"
 marshmallow = "*"
 click = "*"
+jupyter = "*"
+pandas = "*"
+numpy = "*"
+seaborn = "*"
+scipy = "*"
 
 [requires]
 python_version = "3.7"

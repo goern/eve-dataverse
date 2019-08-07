@@ -16,3 +16,4 @@ TODO
 
 * use rate limiting for requests to ESI
 * use sqlite3 rather than plain json files
+* think about grequests to have concurent requests
