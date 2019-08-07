@@ -248,7 +248,9 @@ def order_command_get(ctx, force, type_id, order_type, region_id=None):
     if (region_id is not None) and (type_id is not None):
         orders = markets.get_orders(region_id=region_id, type_id=type_id, order_type=order_type)
 
-        print(orders)
+        _LOGGER.debug("writing Orders to JSON file...")
+        with open("orders.json", "w") as outfile:
+            outfile.write(json.dumps(orders))
 
 
 @kill_command.command(name="get")
