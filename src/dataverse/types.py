@@ -42,6 +42,7 @@ _schema = TypeSchema()
 def load_all_types() -> list:
     """Load all Types from the database file."""
     allTypes = []
+    start_time = time.time()
 
     _LOGGER.debug("loading Types from JSON file...")
 
@@ -58,7 +59,10 @@ def load_all_types() -> list:
         else:
             _LOGGER.error("Can't read Types from JSON file.")
 
-    _LOGGER.debug(f"loaded {len(allTypes)} Types from JSON file...")
+    end_time = time.time()
+    elapsed = end_time - start_time
+
+    _LOGGER.debug(f"loaded {len(allTypes)} Types from JSON file, time elapsed {elapsed}...")
 
     return allTypes
 
