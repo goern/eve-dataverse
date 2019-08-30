@@ -101,6 +101,12 @@ def order_command(ctx):
     pass
 
 
+@cli.group(name="kill")
+@click.pass_context
+def kill_command(ctx):
+    pass
+
+
 @region_command.command(name="get")
 @click.option("--all", is_flag=True, default=False, help="get all Regions")
 @click.option("--force", is_flag=True, default=False, help="forcing the cache to be cleared before harvesting")
@@ -237,6 +243,21 @@ def order_command_get(ctx, force, type_id, order_type, region_id=None):
         orders = markets.get_orders(region_id=region_id, type_id=type_id, order_type=order_type)
 
         print(orders)
+
+
+@kill_command.command(name="get")
+@click.argument("character-id", required=True)
+@click.option("--force", is_flag=True, default=False, help="forcing the cache to be cleared before harvesting")
+@click.pass_context
+def kill_command_get(ctx, force, character_id=None):
+    """The `kill get` sub-command."""
+    if force:
+        _LOGGER.debug(f"clearing cache before harvesting")
+
+        raise NotImplementedError
+
+    if character_id is not None:
+        _LOGGER.info(f"getting kill data for {character_id}")
 
 
 if __name__ == "__main__":
