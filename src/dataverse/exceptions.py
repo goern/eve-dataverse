@@ -36,3 +36,29 @@ class MissingRequiredArgumentError(DataverseError):
     def __init__(self, expression, message):
         self.expression = expression
         self.message = message
+
+
+class WrongRequiredArgumentError(DataverseError):
+    """Exception raised when a required argument has a not allowed value.
+
+    Attributes:
+        expression -- input expression in which the error occurred
+        message -- explanation of the error
+    """
+
+    def __init__(self, expression, message):
+        self.expression = expression
+        self.message = message
+
+
+class UnknownAPIEndpointError(DataverseError):
+    """Exception raised if an unknown API Endpoint is provided.
+
+    Attributes:
+        expression -- input expression in which the error occurred
+        message -- explanation of the error
+    """
+
+    def __init__(self, expression, message):
+        self.expression = expression
+        self.message = message

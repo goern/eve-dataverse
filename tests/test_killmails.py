@@ -16,26 +16,24 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>
 
 
-"""This is just a Test."""
+"""These are the tests for zkillboard killmails."""
 
 
-import diskcache as dc
+import pytest
 
-from enum import Enum
-
-
-from .exceptions import DataverseError, MissingRequiredArgumentError, UnknownAPIEndpointError
+import dataverse
 
 
-__version__ = "0.2.0-dev"
-_USER_AGENT = f"b4dataverse/{__version__}"
+class TestKillmails(object):
+    def test_get_killmails_wrong_character_id(self):
+        with pytest.raises(dataverse.exceptions.WrongRequiredArgumentError):
+            # pylint: disable=unused-variable
+            k = dataverse.killmail.get_killmails(-1)
+            k = dataverse.killmail.get_killmails(0)
 
-_cache = dc.Cache("tmp")
+    def test_get_killmails(self):
+        k = dataverse.killmail.get_killmails(2115480998)
 
-
-class APIEndpoint(Enum):
-    EVE_ONLINE = "https://esi.evetech.net/latest"
-    ZKILLBOARD = "https://zkillboard.com/api"
-
-
-REQUEST_HEADERS = {"User-Agent": _USER_AGENT}
+        assert isinstance(k, list)
+        assert len(k) > 0, "got at least one killmail"
+        assert isinstance(k[0], dataverse.universe.Killmail)
