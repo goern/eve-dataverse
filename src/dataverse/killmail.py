@@ -25,41 +25,66 @@ import logging
 import daiquiri
 import requests
 
+from . import common, _cache, APIEndpoint
+from .exceptions import WrongRequiredArgumentError
+from .universe import KillmailSchema, CharacterSchema
+
 from marshmallow import Schema, ValidationError, fields, post_load
 
 
 _LOGGER = daiquiri.getLogger(__name__)
 
 
-class Killmail:
-    """This is Killmail information as provided by https://zkillboard.com/api/"""
-
-    def __init__(self, killmail_id, location_id, _hash, fitted_value, total_value, points, npc, solo, awox):
-        self.killmail_id = killmail_id
-        self.location_id = location_id
-        self._hash = _hash
-        self.fitted_value = fitted_value
-        self.total_value = total_value
-        self.points = points
-        self.npc = npc
-        self.solo = solo
-        self.awox = awox
-
-    def __str__(self):
-        return f"Killmail {self.killmail_id}: hash: {self._hash}"
+_schema = KillmailSchema()
 
 
-class KillmailSchema(Schema):
-    killmail_id = fields.Integer(required=True)
-    location_id = fields.Integer(required=True)
-    _hash = fields.String(required=True)
-    fitted_value = fields.Integer()
-    total_value = fields.Integer()
-    points = fields.Integer()
-    npc = fields.Boolean()
-    solo = fields.Boolean()
-    awox = fields.Boolean()
+@_cache.memoize(typed=True, expire=600)
+def get_killmails(character_id: int) -> list:
+    """Retriev all Killmails for the given Charakter ID."""
+    killmails = list()
 
-    @post_load
-    def make_killmail(self, data, **kwargs):
-        return Killmail(**data)
+    if character_id < 1:
+        raise WrongRequiredArgumentError(None, character_id)
+
+    try:
+        _killmails = common.get_objects2(APIEndpoint.ZKILLBOARD, f"kills/characterID/{character_id}/")
+        _character = common.get_objects2(APIEndpoint.EVE_ONLINE, f"/characters/{character_id}/?datasource=tranquility")
+        _character["character_id"] = character_id
+
+        for killmail in _killmails:
+            _evekillmail = common.get_objects2(
+                APIEndpoint.EVE_ONLINE,
+                f"killmails/{killmail['killmail_id']}/{killmail['zkb']['hash']}/?datasource=tranquility",
+            )
+
+            _victim = common.get_objects2(
+                APIEndpoint.EVE_ONLINE, f"/characters/{_evekillmail['victim']['character_id']}/?datasource=tranquility"
+            )
+            _victim["character_id"] = _evekillmail["victim"]["character_id"]
+
+            _LOGGER.debug(_victim)
+            _LOGGER.debug(_character)
+
+            km = dict()
+            km["killmail_id"] = killmail["killmail_id"]
+            km["killmail_hash"] = killmail["zkb"]["hash"]
+            km["time"] = _evekillmail["killmail_time"]
+            km["solar_system_id"] = _evekillmail["solar_system_id"]
+            km["position"] = _evekillmail["victim"]["position"]
+            km["character"] = _character
+            km["victim"] = _victim
+            km["location_id"] = killmail["zkb"]["locationID"]
+            km["fitted_value"] = killmail["zkb"]["fittedValue"]
+            km["total_value"] = killmail["zkb"]["totalValue"]
+            km["points"] = killmail["zkb"]["points"]
+            km["npc"] = killmail["zkb"]["npc"]
+            km["solo"] = killmail["zkb"]["solo"]
+            km["awox"] = killmail["zkb"]["awox"]
+
+            k = _schema.load(km)
+            killmails.append(k)
+
+    except Exception as e:
+        _LOGGER.error(e)
+
+    return killmails

@@ -29,9 +29,9 @@ import click
 
 from marshmallow import pprint
 
-from dataverse import universe, regions, constellations, markets, types, common, __version__
+from dataverse import killmail, universe, regions, constellations, markets, types, common, __version__
 
-daiquiri.setup(level=logging.DEBUG)
+daiquiri.setup(level=logging.INFO)
 _LOGGER = daiquiri.getLogger("dataverse.harvester")
 
 allRegions = []
@@ -60,8 +60,12 @@ def harvest_constellation_data():
 @click.version_option(version=__version__)
 @click.option("--debug/--no-debug", default=False, envvar="DEBUG")
 @click.pass_context
-def cli(ctx=None, debug=True):
+def cli(ctx=None, debug=False):
     print(f"This is Eve Online Dataverse harvester v{__version__}.")
+
+    if debug:
+        daiquiri.setup(level=logging.DEBUG)
+
     _LOGGER.debug("DEBUG mode is enabled!")
 
 
@@ -249,15 +253,17 @@ def order_command_get(ctx, force, type_id, order_type, region_id=None):
 @click.argument("character-id", required=True)
 @click.option("--force", is_flag=True, default=False, help="forcing the cache to be cleared before harvesting")
 @click.pass_context
-def kill_command_get(ctx, force, character_id=None):
+def kill_command_get(ctx, force, character_id: int = None):
     """The `kill get` sub-command."""
     if force:
         _LOGGER.debug(f"clearing cache before harvesting")
 
-        raise NotImplementedError
-
     if character_id is not None:
         _LOGGER.info(f"getting kill data for {character_id}")
+
+        for k in killmail.get_killmails(int(character_id)):
+            _LOGGER.debug(k)
+            print(k)
 
 
 if __name__ == "__main__":

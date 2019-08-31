@@ -222,3 +222,119 @@ class TypeSchema(Schema):
     @post_load
     def make_type(self, data, **kwargs):
         return Type(**data)
+
+
+class Character:
+    def __init__(
+        self,
+        character_id,
+        birthday,
+        bloodline_id,
+        corporation_id,
+        gender,
+        name,
+        race_id,
+        alliance_id=None,
+        ancestry_id=None,
+        description=None,
+        faction_id=None,
+        security_status=None,
+        title=None,
+    ):
+        self.character_id = character_id
+        self.alliance_id = alliance_id
+        self.ancestry_id = ancestry_id
+        self.birthday = birthday
+        self.bloodline_id = bloodline_id
+        self.corporation_id = corporation_id
+        self.description = description
+        self.faction_id = faction_id
+        self.gender = gender
+        self.name = name
+        self.race_id = race_id
+        self.security_status = security_status
+        self.title = title
+
+    def __str__(self):
+        return f"Character {self.character_id}: {self.name}"
+
+
+class CharacterSchema(Schema):
+    character_id = fields.Integer(required=True)
+    alliance_id = fields.Integer()
+    ancestry_id = fields.Integer()
+    birthday = fields.String(required=True)
+    bloodline_id = fields.Integer(required=True)
+    corporation_id = fields.Integer(required=True)
+
+    description = fields.String()
+    faction_id = fields.Integer()
+    gender = fields.String(required=True)
+    name = fields.String(required=True)
+    race_id = fields.Integer()
+    security_status = fields.Float()
+    title = fields.String()
+
+    @post_load
+    def make_character(self, data, **kwargs):
+        return Character(**data)
+
+
+class Killmail:
+    """This is Killmail information as provided by https://zkillboard.com/api/, enriched with ESI data."""
+
+    def __init__(
+        self,
+        killmail_id,
+        killmail_hash,
+        character,
+        location_id,
+        fitted_value,
+        total_value,
+        points,
+        npc,
+        solo,
+        awox,
+        time,
+        solar_system_id,
+        position,
+        victim,
+    ):
+        self.killmail_id = killmail_id
+        self.killmail_hash = killmail_hash
+        self.character = character
+        self.location_id = location_id
+        self.fitted_value = fitted_value
+        self.total_value = total_value
+        self.points = points
+        self.npc = npc
+        self.solo = solo
+        self.awox = awox
+        self.time = time
+        self.solar_system_id = solar_system_id
+        self.position = position
+        self.victim = victim
+
+    def __str__(self):
+        return f"Killmail id: {self.killmail_id}, hash: {self.killmail_hash}, location: {self.location_id}, time: {self.time}, fitted Value: {self.fitted_value}, total Value: {self.total_value}, character: {self.character.name}, victim: {self.victim.name}"
+
+
+class KillmailSchema(Schema):
+    killmail_id = fields.Integer(required=True)
+    killmail_hash = fields.String(required=True)
+    character = fields.Nested(CharacterSchema, required=True)
+    location_id = fields.Integer(required=True)
+    fitted_value = fields.Integer()
+    total_value = fields.Integer()
+    points = fields.Integer()
+    npc = fields.Boolean()
+    solo = fields.Boolean()
+    awox = fields.Boolean()
+    time = fields.DateTime()
+    solar_system_id = fields.Integer()
+    position = fields.Nested(PositionSchema)
+    victim = fields.Nested(CharacterSchema)
+
+    @post_load
+    def make_killmail(self, data, **kwargs):
+        return Killmail(**data)

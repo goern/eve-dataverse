@@ -29,14 +29,13 @@ import requests
 
 from marshmallow import Schema, ValidationError, fields, post_load
 
-from . import EVE_ONLINE_BASE_URL, EVE_ONLINE_REQUEST_HEADERS, _cache, MissingRequiredArgumentError
+from . import REQUEST_HEADERS, _cache, MissingRequiredArgumentError, UnknownAPIEndpointError, APIEndpoint
 
 _LOGGER = daiquiri.getLogger(__name__)
 
 
 def get_objects(url: str = None) -> dict:
     """Get objects from ESI, doing pagination."""
-    headers = EVE_ONLINE_REQUEST_HEADERS
     payload = {}
     responses = []
     pages = 1
@@ -46,14 +45,16 @@ def get_objects(url: str = None) -> dict:
     if url is None:
         raise MissingRequiredArgumentError(None, "required 'url' argemunt is missing")
 
+    if not url.startswith("/"):
+        url = "/" + url
+
     start_time = time.time()
 
     # TODO exception handling...
-    r = requests.get(f"{EVE_ONLINE_BASE_URL}{url}", params=payload)
+    r = requests.get(f"{APIEndpoint.EVE_ONLINE.value}{url}", params=payload)
     response = r.json()
 
     # TODO we should handle rate limiting...
-
     try:
         pages = int(r.headers["X-Pages"])  # this might not be present
         objects_etag = r.headers["ETag"]  # pretty save that ETag is always present ;)
@@ -69,7 +70,7 @@ def get_objects(url: str = None) -> dict:
 
     for page in range(2, pages - 1):
         # TODO exception handling...
-        r = requests.get(f"{EVE_ONLINE_BASE_URL}{url}&page={page}", params=payload, headers=headers)
+        r = requests.get(f"{APIEndpoint.EVE_ONLINE.value}{url}&page={page}", params=payload, headers=REQUEST_HEADERS)
         responses.extend(r.json())
 
     end_time = time.time()
@@ -78,3 +79,40 @@ def get_objects(url: str = None) -> dict:
 
     return responses
 
+
+def get_objects2(api: str = APIEndpoint.EVE_ONLINE.value, path: str = None) -> dict:
+    """Get objects from ESI or zkillboard."""
+    responses = []
+
+    if api not in APIEndpoint:
+        raise MissingRequiredArgumentError(None, "required argemunt 'API Endpoint' is missing")
+
+    if not path.startswith("/"):
+        path = "/" + path
+
+    if api == APIEndpoint.EVE_ONLINE:
+        return get_objects(path)
+    elif api == APIEndpoint.ZKILLBOARD:
+        start_time = time.time()
+
+        # TODO exception handling...
+        r = requests.get(f"{APIEndpoint.ZKILLBOARD.value}{path}")
+        response = r.json()
+        end_time_request = time.time()
+
+        if type(response) == list:
+            responses.extend(response)
+        else:
+            responses = response
+
+        end_time_process = time.time()
+        elapsed_request = end_time_request - start_time
+        elapsed_process = end_time_process - start_time - elapsed_request
+        _LOGGER.debug(
+            f"time elapsed to get all {len(responses)} objects: {elapsed_request}, "
+            f"and to process them: {elapsed_process}"
+        )
+    else:
+        raise UnknownAPIEndpointError(None, api)
+
+    return responses
