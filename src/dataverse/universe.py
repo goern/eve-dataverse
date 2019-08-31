@@ -330,7 +330,7 @@ class KillmailSchema(Schema):
     npc = fields.Boolean()
     solo = fields.Boolean()
     awox = fields.Boolean()
-    time = fields.DateTime()
+    time = fields.AwareDateTime()
     solar_system_id = fields.Integer()
     position = fields.Nested(PositionSchema)
     victim = fields.Nested(CharacterSchema)

@@ -36,4 +36,4 @@ class TestKillmails(object):
 
         assert isinstance(k, list)
         assert len(k) > 0, "got at least one killmail"
-        assert isinstance(k[0], dataverse.killmail.Killmail)
+        assert isinstance(k[0], dataverse.universe.Killmail)
