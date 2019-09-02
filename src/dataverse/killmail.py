@@ -42,48 +42,63 @@ _schema = KillmailSchema()
 def get_killmails(character_id: int) -> list:
     """Retriev all Killmails for the given Charakter ID."""
     killmails = list()
+    need_to_get_more = True
+    page = 1
 
     if character_id < 1:
         raise WrongRequiredArgumentError(None, character_id)
 
     try:
-        _killmails = common.get_objects2(APIEndpoint.ZKILLBOARD, f"kills/characterID/{character_id}/")
-        _character = common.get_objects2(APIEndpoint.EVE_ONLINE, f"/characters/{character_id}/?datasource=tranquility")
-        _character["character_id"] = character_id
+        while need_to_get_more:
+            _killmails = common.get_objects2(APIEndpoint.ZKILLBOARD, f"/kills/characterID/{character_id}/page/{page}/")
+            _LOGGER.debug(_killmails)
 
-        for killmail in _killmails:
-            _evekillmail = common.get_objects2(
-                APIEndpoint.EVE_ONLINE,
-                f"killmails/{killmail['killmail_id']}/{killmail['zkb']['hash']}/?datasource=tranquility",
+            # if there is no killmail on this page... BREAK BREAK BREAK!!
+            if len(_killmails) == 0:
+                need_to_get_more = False
+
+            _character = common.get_objects2(
+                APIEndpoint.EVE_ONLINE, f"/characters/{character_id}/?datasource=tranquility"
             )
+            _character["character_id"] = character_id
 
-            # TODO refactor this out to get the cache going
-            _victim = common.get_objects2(
-                APIEndpoint.EVE_ONLINE, f"/characters/{_evekillmail['victim']['character_id']}/?datasource=tranquility"
-            )
-            _victim["character_id"] = _evekillmail["victim"]["character_id"]
+            for killmail in _killmails:
+                _evekillmail = common.get_objects2(
+                    APIEndpoint.EVE_ONLINE,
+                    f"killmails/{killmail['killmail_id']}/{killmail['zkb']['hash']}/?datasource=tranquility",
+                )
 
-            _LOGGER.debug(_victim)
-            _LOGGER.debug(_character)
+                # TODO refactor this out to get the cache going
+                _victim = common.get_objects2(
+                    APIEndpoint.EVE_ONLINE,
+                    f"/characters/{_evekillmail['victim']['character_id']}/?datasource=tranquility",
+                )
+                _victim["character_id"] = _evekillmail["victim"]["character_id"]
 
-            km = dict()
-            km["killmail_id"] = killmail["killmail_id"]
-            km["killmail_hash"] = killmail["zkb"]["hash"]
-            km["time"] = _evekillmail["killmail_time"]
-            km["solar_system_id"] = _evekillmail["solar_system_id"]
-            km["position"] = _evekillmail["victim"]["position"]
-            km["character"] = _character
-            km["victim"] = _victim
-            km["location_id"] = killmail["zkb"]["locationID"]
-            km["fitted_value"] = killmail["zkb"]["fittedValue"]
-            km["total_value"] = killmail["zkb"]["totalValue"]
-            km["points"] = killmail["zkb"]["points"]
-            km["npc"] = killmail["zkb"]["npc"]
-            km["solo"] = killmail["zkb"]["solo"]
-            km["awox"] = killmail["zkb"]["awox"]
+                _LOGGER.debug(_victim)
+                _LOGGER.debug(_character)
 
-            k = _schema.load(km)
-            killmails.append(k)
+                km = dict()
+                km["killmail_id"] = killmail["killmail_id"]
+                km["killmail_hash"] = killmail["zkb"]["hash"]
+                km["time"] = _evekillmail["killmail_time"]
+                km["solar_system_id"] = _evekillmail["solar_system_id"]
+                km["position"] = _evekillmail["victim"]["position"]
+                km["character"] = _character
+                km["victim"] = _victim
+                km["location_id"] = killmail["zkb"]["locationID"]
+                km["fitted_value"] = killmail["zkb"]["fittedValue"]
+                km["total_value"] = killmail["zkb"]["totalValue"]
+                km["points"] = killmail["zkb"]["points"]
+                km["npc"] = killmail["zkb"]["npc"]
+                km["solo"] = killmail["zkb"]["solo"]
+                km["awox"] = killmail["zkb"]["awox"]
+
+                k = _schema.load(km)
+                killmails.append(k)
+
+            # let's walk on to the next page...
+            page = page + 1
 
     except Exception as e:
         _LOGGER.error(e)

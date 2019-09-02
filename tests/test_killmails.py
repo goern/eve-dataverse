@@ -37,3 +37,10 @@ class TestKillmails(object):
         assert isinstance(k, list)
         assert len(k) > 0, "got at least one killmail"
         assert isinstance(k[0], dataverse.universe.Killmail)
+
+    def test_get_killmails_paginated(self):
+        k = dataverse.killmail.get_killmails(268946627)
+
+        assert isinstance(k, list)
+        assert len(k) > 0, "got at least one killmail"
+        assert isinstance(k[0], dataverse.universe.Killmail)
