@@ -61,7 +61,7 @@ def get_objects(url: str = None) -> dict:
 
         _LOGGER.debug(f"{objects_etag}: {response}")
     except KeyError as e:
-        _LOGGER.warning(f"Can't find Header 'X-Pages' in HTTP response object: {e}")
+        _LOGGER.debug(f"Can't find Header 'X-Pages' in HTTP response object: {e}")
 
     if type(response) == list:
         responses.extend(response)

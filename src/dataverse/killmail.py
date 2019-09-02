@@ -57,6 +57,7 @@ def get_killmails(character_id: int) -> list:
                 f"killmails/{killmail['killmail_id']}/{killmail['zkb']['hash']}/?datasource=tranquility",
             )
 
+            # TODO refactor this out to get the cache going
             _victim = common.get_objects2(
                 APIEndpoint.EVE_ONLINE, f"/characters/{_evekillmail['victim']['character_id']}/?datasource=tranquility"
             )
