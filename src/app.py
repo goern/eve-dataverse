@@ -19,9 +19,11 @@
 """This is a harvester for Eve Online Swagger API (aka ESI) data."""
 
 
+import sys
 import os
 import logging
 import json
+import csv
 
 import daiquiri
 import requests
@@ -252,18 +254,60 @@ def order_command_get(ctx, force, type_id, order_type, region_id=None):
 @kill_command.command(name="get")
 @click.argument("character-id", required=True)
 @click.option("--force", is_flag=True, default=False, help="forcing the cache to be cleared before harvesting")
+@click.option("--output", type=click.Choice(["text", "csv"]), default="text", help="output formatting")
 @click.pass_context
-def kill_command_get(ctx, force, character_id: int = None):
+def kill_command_get(ctx, force, output, character_id: int = None):
     """The `kill get` sub-command."""
+    writer = None
+
     if force:
         _LOGGER.debug(f"clearing cache before harvesting")
 
     if character_id is not None:
         _LOGGER.info(f"getting kill data for {character_id}")
 
-        for k in killmail.get_killmails(int(character_id)):
+        killmails = killmail.get_killmails(int(character_id))
+
+        if output.upper() == "CSV":
+            writer = csv.DictWriter(
+                sys.stdout,
+                fieldnames=[
+                    "killmail_id",
+                    "killmail_hash",
+                    "killmail_time",
+                    "location_id",
+                    "fitted_value",
+                    "total_value",
+                    "character_id",
+                    "character_name",
+                    "victim_id",
+                    "victim_name",
+                ],
+            )
+
+            writer.writeheader()
+
+        for k in killmails:
             _LOGGER.debug(k)
-            print(k)
+
+            if output.upper() == "CSV":
+                writer.writerow(
+                    {
+                        "killmail_id": k.killmail_id,
+                        "killmail_hash": k.killmail_hash,
+                        "killmail_time": k.time,
+                        "location_id": k.location_id,
+                        "fitted_value": k.fitted_value,
+                        "total_value": k.total_value,
+                        "character_id": k.character.character_id,
+                        "character_name": k.character.name,
+                        "victim_id": k.victim.character_id,
+                        "victim_name": k.victim.name,
+                    }
+                )
+
+            else:
+                print(k)
 
 
 if __name__ == "__main__":
