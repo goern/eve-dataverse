@@ -61,22 +61,9 @@ def get_killmails(character_id: int) -> list:
             _LOGGER.debug(f"killmail: {json.dumps(_killmails)}")
             _LOGGER.debug(f"number of killmail: {len(_killmails)}")
 
-            _character = common.get_objects2(
-                APIEndpoint.EVE_ONLINE, f"/characters/{character_id}/?datasource=tranquility"
-            )
+            _character = common.get_character(character_id)
             _LOGGER.debug(f"character: {json.dumps(_character)}")
 
-            _character["character_id"] = character_id
-
-            for killmail in _killmails:
-                _evekillmail = common.get_objects2(
-                    APIEndpoint.EVE_ONLINE,
-                    f"killmails/{killmail['killmail_id']}/{killmail['zkb']['hash']}/?datasource=tranquility",
-                )
-
-                _character = common.get_objects2(
-                    APIEndpoint.EVE_ONLINE, f"/characters/{character_id}/?datasource=tranquility"
-                )
             _character["character_id"] = character_id
 
             for killmail in _killmails:
@@ -119,5 +106,7 @@ def get_killmails(character_id: int) -> list:
 
     except Exception as e:
         _LOGGER.exception(e)
+
+    _LOGGER.debug(f"total numner of killmails: {len(killmails)}")
 
     return killmails
