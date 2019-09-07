@@ -23,6 +23,8 @@ daiquiri = "*"
 diskcache = "*"
 marshmallow = "*"
 click = "*"
+sqlalchemy = "*"
+marshmallow-sqlalchemy = "*"
 
 [requires]
 python_version = "3.7"
