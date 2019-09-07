@@ -8,6 +8,7 @@ black = "*"
 pylint = "*"
 pytest = "*"
 pytest-cov = "*"
+pytest-azurepipelines = "*"
 
 [packages]
 requests = "*"
