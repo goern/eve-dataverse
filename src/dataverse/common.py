@@ -51,8 +51,14 @@ def get_objects(url: str = None) -> dict:
     start_time = time.time()
 
     # TODO exception handling...
-    r = requests.get(f"{APIEndpoint.EVE_ONLINE.value}{url}", params=payload)
-    response = r.json()
+    try:
+        r = requests.get(f"{APIEndpoint.EVE_ONLINE.value}{url}", params=payload)
+        response = r.json()
+    except requests.exceptions.ConnectionError as c:
+        _LOGGER.warning(c)
+        return []
+    except Exception as e:
+        _LOGGER.exception(e)
 
     # TODO we should handle rate limiting...
     try:
