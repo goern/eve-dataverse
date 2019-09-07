@@ -9,6 +9,13 @@ pylint = "*"
 pytest = "*"
 pytest-cov = "*"
 pytest-azurepipelines = "*"
+mypy = "*"
+jupyter = "*"
+pandas = "*"
+numpy = "*"
+seaborn = "*"
+scipy = "*"
+sklearn = "*"
 
 [packages]
 requests = "*"

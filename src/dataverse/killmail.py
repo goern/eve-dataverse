@@ -21,6 +21,7 @@
 
 import os
 import logging
+import json
 
 import daiquiri
 import requests
@@ -57,9 +58,12 @@ def get_killmails(character_id: int) -> list:
             if len(_killmails) == 0:
                 need_to_get_more = False
 
-            _character = common.get_objects2(
-                APIEndpoint.EVE_ONLINE, f"/characters/{character_id}/?datasource=tranquility"
-            )
+            _LOGGER.debug(f"killmail: {json.dumps(_killmails)}")
+            _LOGGER.debug(f"number of killmail: {len(_killmails)}")
+
+            _character = common.get_character(character_id)
+            _LOGGER.debug(f"character: {json.dumps(_character)}")
+
             _character["character_id"] = character_id
 
             for killmail in _killmails:
@@ -101,6 +105,8 @@ def get_killmails(character_id: int) -> list:
             page = page + 1
 
     except Exception as e:
-        _LOGGER.error(e)
+        _LOGGER.exception(e)
+
+    _LOGGER.debug(f"total numner of killmails: {len(killmails)}")
 
     return killmails

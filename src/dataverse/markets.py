@@ -21,15 +21,43 @@
 
 import os
 import logging
+import json
 
 import daiquiri
 import requests
+
+
+from marshmallow import ValidationError
 
 
 from . import common, _cache
 
 
 _LOGGER = daiquiri.getLogger(__name__)
+
+
+def load_all_orders() -> list:
+    """Load all Orders from the database file."""
+    allOrders = []
+
+    _LOGGER.debug("loading Orders from JSON file...")
+
+    with open("orders.json") as file:
+        data = json.load(file)
+
+        if data is not None:
+            for o in data:
+                try:
+                    allOrders.append(OrderSchema().load(o))
+                except ValidationError as e:
+                    _LOGGER.error(e)
+                    continue
+        else:
+            _LOGGER.error("Can't read Orders from JSON file.")
+
+    _LOGGER.debug(f"loaded {len(allOrders)} Orders from JSON file...")
+
+    return allOrders
 
 
 @_cache.memoize(typed=True, expire=600)
@@ -69,5 +97,15 @@ def get_orders(region_id: int, order_type: str, type_id: int) -> dict:
     except Exception as e:  # TODO this is way to fuzzy
         _LOGGER.error(e)
         raise e
+
+    return result
+
+
+@_cache.memoize(typed=True, expire=600)
+def get_order(order_id: int) -> dict:
+    """Get the Order by ID."""
+    result = None
+
+    _LOGGER.debug(f"getting market order {order_id}")
 
     return result

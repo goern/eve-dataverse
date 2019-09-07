@@ -26,6 +26,7 @@ import daiquiri
 import requests
 
 from marshmallow import Schema, ValidationError, fields, post_load
+from marshmallow.validate import OneOf
 
 
 _LOGGER = daiquiri.getLogger(__name__)
@@ -129,6 +130,36 @@ class Region:
 
     def __str__(self):
         return f"{self.region_id}: {self.name}, {self.description}, constellations: {self.constellations}"
+
+
+class Order:
+    def __init__(
+        self,
+        duration=None,
+        is_buy_order=True,
+        issued=None,
+        location_id=None,
+        min_volume=1,
+        order_id=None,
+        price=None,
+        range_="station",
+        system_id=None,
+        type_id=None,
+        volume_remain=None,
+        volume_total=None,
+    ):
+        self.duration = duration
+        self.is_buy_order = is_buy_order
+        self.issued = issued
+        self.location_id = location_id
+        self.min_volume = min_volume
+        self.order_id = order_id
+        self.price = price
+        self.range = range_
+        self.system_id = system_id
+        self.type_id = type_id
+        self.volume_remain = volume_remain
+        self.volume_total = volume_total
 
 
 class RegionSchema(Schema):
@@ -338,3 +369,26 @@ class KillmailSchema(Schema):
     @post_load
     def make_killmail(self, data, **kwargs):
         return Killmail(**data)
+
+
+class OrderSchema(Schema):
+    duration = (fields.Integer(required=True),)
+    is_buy_order = (fields.Boolean(required=True),)
+    issued = (fields.Date(required=True),)
+    location_id = (fields.Integer(required=True),)
+    min_volume = (fields.Integer(required=True),)
+    order_id = (fields.Integer(required=True),)
+    price = (fields.Float(required=True),)
+    range_ = (
+        fields.String(
+            required=True, validate=OneOf(["station", "region", "solarsystem", 1, 2, 3, 4, 5, 10, 20, 30, 40])
+        ),
+    )
+    system_id = (fields.Integer(required=True),)
+    type_id = (fields.Integer(required=True),)
+    volume_remain = (fields.Integer(required=True),)
+    volume_total = (fields.Integer(required=True),)
+
+    @post_load
+    def make_order(self, data, **kwargs):
+        return Order(**data)

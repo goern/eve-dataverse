@@ -51,8 +51,14 @@ def get_objects(url: str = None) -> dict:
     start_time = time.time()
 
     # TODO exception handling...
-    r = requests.get(f"{APIEndpoint.EVE_ONLINE.value}{url}", params=payload)
-    response = r.json()
+    try:
+        r = requests.get(f"{APIEndpoint.EVE_ONLINE.value}{url}", params=payload)
+        response = r.json()
+    except requests.exceptions.ConnectionError as c:
+        _LOGGER.warning(c)
+        return []
+    except Exception as e:
+        _LOGGER.exception(e)
 
     # TODO we should handle rate limiting...
     try:
@@ -116,3 +122,16 @@ def get_objects2(api: str = APIEndpoint.EVE_ONLINE.value, path: str = None) -> d
         raise UnknownAPIEndpointError(None, api)
 
     return responses
+
+
+@_cache.memoize(typed=True, expire=600)
+def get_character(character_id: int = None) -> dict:
+    """Get character from ESI."""
+    if character_id is None:
+        raise MissingRequiredArgumentError(None, "required argemunt 'character_id' is missing")
+
+    # TODO exception handling
+    _character = get_objects2(APIEndpoint.EVE_ONLINE, f"/characters/{character_id}/?datasource=tranquility")
+    _LOGGER.debug(f"character: {json.dumps(_character)}")
+
+    return _character

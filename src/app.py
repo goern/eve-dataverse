@@ -22,6 +22,7 @@
 import sys
 import os
 import logging
+import time
 import json
 import csv
 
@@ -230,14 +231,20 @@ def type_command_find_by_id(ctx, json_output, search_in_attribute, search_string
                 print(t)
 
 
-@order_command.command(name="get")
+@order_command.command(name="get-all")
 @click.option("--region-id", required=True, help="Region ID to get the market orders from")
-@click.option("--type-id", default=34, help="limit getting market orders to this Type ID")
+@click.option(
+    "--type-id",
+    default=34,
+    help="limit getting market orders to this Type ID, if set to '0' orders for all Types will be retrieved",
+)
 @click.option("--order-type", type=click.Choice(["all", "sell", "buy"]), default="all", help="the order type to get")
 @click.option("--force", is_flag=True, default=False, help="forcing the cache to be cleared before harvesting")
 @click.pass_context
-def order_command_get(ctx, force, type_id, order_type, region_id=None):
-    """The `order get` sub-command."""
+def order_command_get_all(ctx, force, type_id, order_type, region_id=None):
+    """Retrieve all orders from a specific region, limitation to a type or order type is optional."""
+    all_orders = []
+    start_time = time.time()
     _LOGGER.info("getting Market data...")
 
     if force:
@@ -246,9 +253,39 @@ def order_command_get(ctx, force, type_id, order_type, region_id=None):
         raise NotImplementedError
 
     if (region_id is not None) and (type_id is not None):
-        orders = markets.get_orders(region_id=region_id, type_id=type_id, order_type=order_type)
+        if type_id == 0:
+            _LOGGER.debug(f"retrieving orders for all Types...")
 
-        print(orders)
+            for t in types.load_all_types():
+                all_orders.append(markets.get_orders(region_id=region_id, type_id=t, order_type=order_type))
+
+        else:
+            all_orders = markets.get_orders(region_id=region_id, type_id=type_id, order_type=order_type)
+
+        _LOGGER.debug("writing Orders to JSON file...")
+        with open("orders.json", "w") as outfile:
+            outfile.write(json.dumps(all_orders))
+
+    end_time = time.time()
+    elapsed = end_time - start_time
+    _LOGGER.debug(f"time elapsed to get all {len(all_orders)} Orders: {elapsed}")
+
+
+@order_command.command(name="get")
+@click.argument("order-id", required=True, type=int)
+@click.option("--json-output", is_flag=True, default=False, help="print search result as JSON")
+@click.pass_context
+def order_command_get(ctx, json_output, order_id: int):
+    """Get the details of one specific Order."""
+    _LOGGER.info("getting Order data...")
+
+    if order_id is not None:
+        for o in markets.load_all_orders():
+            if o.order_id == order_id:
+                if json_output:
+                    print(universe.OrderSchema().dumps(o))
+                else:
+                    print(o)
 
 
 @kill_command.command(name="get")
