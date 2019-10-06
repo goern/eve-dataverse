@@ -57,6 +57,9 @@ def get_objects(url: str = None) -> dict:
     except requests.exceptions.ConnectionError as c:
         _LOGGER.warning(c)
         return []
+    except json.decoder.JSONDecodeError as j:
+        _LOGGER.warning(j)
+        return []
     except Exception as e:
         _LOGGER.exception(e)
 
